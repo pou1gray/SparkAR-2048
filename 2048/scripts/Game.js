@@ -93,7 +93,7 @@ const Diagnostics = require('Diagnostics');
             let y = GetRandom(0, 3);
 
             if(arrayValue[x][y] == null){
-                BoxInstantiate(x, y, 2);
+                await BoxInstantiate(x, y, 2);
                 boxCount++;
             }
         }
