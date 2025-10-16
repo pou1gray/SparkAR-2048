@@ -3,3 +3,5 @@ An older project that won the **Talenthouse x Meta Spark** competition back in 2
 The code isn't the cleanest (it was made with the **KISS** principle in mind).
 
 Sadly, **Meta Spark** is no longer available, which is why I've decided to make this project public.
+
+[![Watch the video](https://img.youtube.com/vi/lxmejuQTn_A/sddefault.jpg)](https://youtube.com/shorts/lxmejuQTn_A?feature=share)
