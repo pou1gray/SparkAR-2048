@@ -1,25 +1,68 @@
 const Scene = require('Scene');
 const Animation = require('Animation');
+const Audio = require('Audio');
 const Blocks = require('Blocks');
 const TouchGestures = require('TouchGestures');
 const Persistence = require('Persistence');
 const Time = require('Time');
 const Patches = require('Patches');
 const Reactive = require('Reactive');
-const Diagnostics = require('Diagnostics');
+const Textures = require('Textures');
 
 (async function () { 
 
     const placer = await Scene.root.findFirst('Placer');
-    const floor = await Scene.root.findFirst('Floor');
-
     const buttonStart = await Scene.root.findFirst('ButtonStartGame');
     const buttonTryAgain = await Scene.root.findFirst('ButtonTryAgain');
     const scoreText = await Scene.root.findFirst('ScoreText');
     const bestText = await Scene.root.findFirst('BestText');
     const swipeTip = await Scene.root.findFirst('SwipeTip');
 
-    const userScope = Persistence.userScope;
+    const audioMerge = await Audio.getAudioPlaybackController("AudioMerge");
+    const audioMove = await Audio.getAudioPlaybackController("AudioMove");
+
+    const arrayIcon = 
+    {
+        2: await Textures.findFirst('Sprite_Tiles_0'),
+        4: await Textures.findFirst('Sprite_Tiles_1'),
+        8: await Textures.findFirst('Sprite_Tiles_2'),
+        16: await Textures.findFirst('Sprite_Tiles_3'),
+        32: await Textures.findFirst('Sprite_Tiles_4'),
+        64: await Textures.findFirst('Sprite_Tiles_5'),
+        128: await Textures.findFirst('Sprite_Tiles_6'),
+        256: await Textures.findFirst('Sprite_Tiles_7'),
+        512: await Textures.findFirst('Sprite_Tiles_8'),
+        1024: await Textures.findFirst('Sprite_Tiles_9'),
+        2048: await Textures.findFirst('Sprite_Tiles_10'),
+        4096: await Textures.findFirst('Sprite_Tiles_11'),
+        8192: await Textures.findFirst('Sprite_Tiles_12'),
+        16384: await Textures.findFirst('Sprite_Tiles_13'),
+        32768: await Textures.findFirst('Sprite_Tiles_14'),
+        65536: await Textures.findFirst('Sprite_Tiles_15'),
+        131072: await Textures.findFirst('Sprite_Tiles_16')
+    }
+
+    const arrayColor = {
+        2: Reactive.RGBA(0.254902, 0.4470588, 1, 1),
+        4: Reactive.RGBA(0.5882353, 0.3137255, 0.6078432, 1),
+        8: Reactive.RGBA(0.254902, 0.6352941, 1, 1),
+        16: Reactive.RGBA(0.7803922, 0.7333333, 0.227451, 1),
+        32: Reactive.RGBA(0.88, 0.42, 0.3, 1),
+        64: Reactive.RGBA(0.69, 0.23, 0.81, 1),
+        128: Reactive.RGBA(0.8018868, 0.2080367, 0.4520687, 1),
+        256: Reactive.RGBA(0.754717, 0.1793145, 0.1673193, 1),
+        512: Reactive.RGBA(0.7830189, 0.463211, 0.1883677, 1),
+        1024: Reactive.RGBA(0.7414356, 0.7830189, 0, 1),
+        2048: Reactive.RGBA(0.4324116, 0.735849, 0.01735493, 1),
+        4096: Reactive.RGBA(0.04184154, 0.7830189, 0.01108044, 1),
+        8192: Reactive.RGBA(0, 0.6415094, 0.2216436, 1),
+        16384: Reactive.RGBA(0, 0.7735849, 0.5514137, 1),
+        32768: Reactive.RGBA(0, 0.745283, 0.7226967, 1),
+        65536: Reactive.RGBA(0, 0.8233426, 1, 1),
+        131072: Reactive.RGBA(0, 0.1231611, 0.8396226, 1)
+    };
+
+    const persistenceLocal = Persistence.local;
 
     let started = false;
     let score = 0;
@@ -34,17 +77,15 @@ const Diagnostics = require('Diagnostics');
     let animationCount = 0;
 
     try {
-        const result = await userScope.get('data');
+        const result = await persistenceLocal.get('data');
         best = result.best;
-        bestText.text = 'Best:\n' + best;
+        bestText.text = 'High score:\n' + best;
     } catch (error) {
-        Diagnostics.log('Error - ' + error);
     }
 
     Patches.inputs.setBoolean('Started', false);
 
     TouchGestures.onTap(buttonStart).subscribe( () =>{
-        started = true;
         buttonStart.hidden = true;
         Patches.inputs.setBoolean('Started', true);
         swipeTip.hidden = false;
@@ -97,6 +138,10 @@ const Diagnostics = require('Diagnostics');
                 boxCount++;
             }
         }
+        started = true;
+
+        score = 0;
+        scoreText.text = 'Score:\n' + score.toString();
     }
 
     async function Lose(){
@@ -104,10 +149,10 @@ const Diagnostics = require('Diagnostics');
         buttonTryAgain.hidden = false;
         if(score > best){
             best = score;
-            let data = {best: best}
-            bestText.text = 'Best:\n' + best;
+            let data = {best: best};
+            bestText.text = 'High score:\n' + best;
             try {
-                await userScope.set('data', data);
+                await Persistence.local.set('data', data);
               } catch (error) {
                   Diagnostics.log('Error - ' + error);
               }
@@ -128,9 +173,11 @@ const Diagnostics = require('Diagnostics');
 
             SetBoxText(box, value.toString());
             SetBoxColor(box, GetColorByValue(value));
+            SetBoxIcon(box, GetTextureByValue(value));
 
+            /*
             let animationDriver = Animation.timeDriver({
-                durationMilliseconds: 500,
+                durationMilliseconds: 200,
                 loopCount: 1,
                 mirror: false
             });
@@ -148,6 +195,7 @@ const Diagnostics = require('Diagnostics');
             box.transform.scaleZ = animationZ;
             
             animationDriver.start();
+            */
 
             return box;
         }else{
@@ -182,6 +230,8 @@ const Diagnostics = require('Diagnostics');
                         }
                         if(merge){
                             somethingChanged = true;
+                            audioMerge.reset();
+                            audioMerge.setPlaying(true);
                             continue;
                         }
                         if(offset > 0){
@@ -194,8 +244,10 @@ const Diagnostics = require('Diagnostics');
 
                             arrayValue[x][y] = null;
                             arrayValue[x][y-offset] = tempValue;
-
                             AnimateMove(tempBox, Reactive.point2d(x, y-offset));
+
+                            audioMove.reset();
+                            audioMove.setPlaying(true);
                         }
                     }
                 }
@@ -225,6 +277,8 @@ const Diagnostics = require('Diagnostics');
                         }
                         if(merge){
                             somethingChanged = true;
+                            audioMerge.reset();
+                            audioMerge.setPlaying(true);
                             continue;
                         }
                         if(offset > 0){
@@ -237,8 +291,10 @@ const Diagnostics = require('Diagnostics');
 
                             arrayValue[x][y] = null;
                             arrayValue[x+offset][y] = tempValue;
-
                             AnimateMove(tempBox, Reactive.point2d(x+offset, y));
+
+                            audioMove.reset();
+                            audioMove.setPlaying(true);
                         }
                     }
                 }
@@ -268,6 +324,8 @@ const Diagnostics = require('Diagnostics');
                         }
                         if(merge){
                             somethingChanged = true;
+                            audioMerge.reset();
+                            audioMerge.setPlaying(true);
                             continue;
                         }
                         if(offset > 0){
@@ -280,8 +338,10 @@ const Diagnostics = require('Diagnostics');
 
                             arrayValue[x][y] = null;
                             arrayValue[x][y+offset] = tempValue;
-
                             AnimateMove(tempBox, Reactive.point2d(x, y+offset));
+
+                            audioMove.reset();
+                            audioMove.setPlaying(true);
                         }
                     }
                 }
@@ -311,6 +371,8 @@ const Diagnostics = require('Diagnostics');
                         }
                         if(merge){
                             somethingChanged = true;
+                            audioMerge.reset();
+                            audioMerge.setPlaying(true);
                             continue;
                         }
                         if(offset > 0){
@@ -323,8 +385,10 @@ const Diagnostics = require('Diagnostics');
 
                             arrayValue[x][y] = null;
                             arrayValue[x-offset][y] = tempValue;
-
                             AnimateMove(tempBox, Reactive.point2d(x-offset, y));
+
+                            audioMove.reset();
+                            audioMove.setPlaying(true);
                         }
                     }
                 }
@@ -332,13 +396,12 @@ const Diagnostics = require('Diagnostics');
         }
 
         let freePlaces = 0;
-        let scoreValue = 0;
 
         for(let x = 0; x < 4; x++){
             for(let y = 0; y < 4; y++){
                 if(arrayValue[x][y] == null){
                     freePlaces++
-                } else scoreValue += arrayValue[x][y];
+                }
             }
         }
 
@@ -357,9 +420,6 @@ const Diagnostics = require('Diagnostics');
         }else{
             Lose();
         }
-
-        score = scoreValue;
-        scoreText.text = 'Score:\n' + scoreValue.toString();
     }
 
     async function AnimateMerge(object, to){
@@ -369,7 +429,7 @@ const Diagnostics = require('Diagnostics');
         let toPosition = GetPosition(to.x.pinLastValue(),to.y.pinLastValue());
 
         let animationDriver = Animation.timeDriver({
-            durationMilliseconds: Math.sqrt(Math.pow((toPosition.x - objectLink.transform.x.pinLastValue()), 2) + Math.pow((toPosition.y - objectLink.transform.z.pinLastValue()), 2)) * 2500 / 2,
+            durationMilliseconds: 200,//Math.sqrt(Math.pow((toPosition.x - objectLink.transform.x.pinLastValue()), 2) + Math.pow((toPosition.y - objectLink.transform.z.pinLastValue()), 2)) * 2500 / 2,
             loopCount: 1,
             mirror: false
         });
@@ -380,7 +440,7 @@ const Diagnostics = require('Diagnostics');
         let animationMoveX = Animation.animate(animationDriver, animationSamplerMoveX);
         let animationMoveZ = Animation.animate(animationDriver, animationSamplerMoveZ);
 
-        let animationSamplerScale = Animation.samplers.linear(1, 0.75);
+        let animationSamplerScale = Animation.samplers.linear(1, 0.25);
         let animationScale = Animation.animate(animationDriver, animationSamplerScale);
 
         objectLink.transform.x = animationMoveX;
@@ -397,13 +457,17 @@ const Diagnostics = require('Diagnostics');
             let boxToSetup = (await arrayBox[to.x.pinLastValue()][to.y.pinLastValue()]);
             SetBoxText(boxToSetup, arrayValue[to.x.pinLastValue()][to.y.pinLastValue()].toString());
             SetBoxColor(boxToSetup, GetColorByValue(arrayValue[to.x.pinLastValue()][to.y.pinLastValue()]));
+            SetBoxIcon(boxToSetup, GetTextureByValue(arrayValue[to.x.pinLastValue()][to.y.pinLastValue()]));
+
+            score += arrayValue[to.x.pinLastValue()][to.y.pinLastValue()];
+            scoreText.text = 'Score:\n' + score.toString();
 
             let animationDriverGrow = Animation.timeDriver({
-                durationMilliseconds: 150,
+                durationMilliseconds: 100,
                 loopCount: 2,
                 mirror: true
             });
-            let animationSamplerGrow = Animation.samplers.linear(1, 1.15);
+            let animationSamplerGrow = Animation.samplers.linear(1, 1.25, 1);
             let animationGrow = Animation.animate(animationDriverGrow, animationSamplerGrow);
 
             boxToSetup.transform.scaleX = animationGrow;
@@ -422,7 +486,7 @@ const Diagnostics = require('Diagnostics');
         let toPosition = GetPosition(to.x.pinLastValue(),to.y.pinLastValue());
 
         let animationDriver = Animation.timeDriver({
-            durationMilliseconds: Math.sqrt(Math.pow((toPosition.x - (await object).transform.x.pinLastValue()), 2) + Math.pow((toPosition.y - (await object).transform.z.pinLastValue()), 2)) * 2500 / 2,
+            durationMilliseconds: 200,//Math.sqrt(Math.pow((toPosition.x - (await object).transform.x.pinLastValue()), 2) + Math.pow((toPosition.y - (await object).transform.z.pinLastValue()), 2)) * 2500 / 2,
             loopCount: 1,
             mirror: false
         });
@@ -451,6 +515,11 @@ const Diagnostics = require('Diagnostics');
         box.inputs.setColor('BoxColor', color);
     }
 
+    function SetBoxIcon(box, texture)
+    {
+        box.inputs.setShader('Icon', texture.signal);
+    }
+
     function GetPosition(gridX, gridY){
         let position = {
             x: gridX * 0.125 - 0.185,
@@ -460,7 +529,13 @@ const Diagnostics = require('Diagnostics');
     }
 
     function GetColorByValue(value){
-        return Reactive.RGBA(RandomBySeed(value), RandomBySeed(Math.pow(value,2)), RandomBySeed(Math.pow(value,3)), 1);
+        return arrayColor[value] || arrayColor[2];
+        //return Reactive.RGBA(RandomBySeed(value), RandomBySeed(Math.pow(value,2)), RandomBySeed(Math.pow(value,3)), 1);
+    }
+
+    function GetTextureByValue(value)
+    {
+        return arrayIcon[value] || arrayIcon[2];
     }
 
     function RandomBySeed(seed){

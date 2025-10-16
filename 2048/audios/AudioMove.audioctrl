@@ -1,0 +1,8 @@
+{
+  "modelName": "playback_controller_model",
+  "name": "AudioMove",
+  "identifier": "playback_controller_model:49834-bdd99f4b-1e42-4df7-aba6-da63d567c5b2",
+  "needsContinuousLooping": false,
+  "needsContinuousPlaying": false,
+  "soundIdentifier": "sound:46580-bdd99f4b-1e42-4df7-aba6-da63d567c5b2"
+}

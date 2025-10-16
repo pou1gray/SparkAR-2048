@@ -1,0 +1,36 @@
+{
+  "modelName": "texture",
+  "name": "ButtonStartGame",
+  "identifier": "texture211727-57be273b-0a56-422f-86d5-ef2b90bafe68",
+  "alphaPremultiplicationMode": "should_premultiply",
+  "assetDataHash": "b1ac3633901cf63e205a785ac161ab0a",
+  "assetLocator": "textures/ButtonStartGame.png",
+  "colorEncoding": "linear",
+  "compressionQuality": "high",
+  "coordMapping": "none",
+  "excludeDuringExport": false,
+  "excludeFromPackage": false,
+  "filter": "bilinear",
+  "hasOfflineMipmaps": false,
+  "height": 96,
+  "importIssues": {},
+  "isExternalAsset": true,
+  "smartTextureTargetSizeLimit": "largest",
+  "targetSize": "largest",
+  "uWrapMode": "clamp",
+  "vWrapMode": "clamp",
+  "width": 256,
+  "children": [
+    {
+      "modelName": "data_texture_metadata_model",
+      "name": "data_texture_metadata_model0",
+      "assetDataHash": "b1ac3633901cf63e205a785ac161ab0a",
+      "colorCount": 15,
+      "detectedAlphaChannel": "eight_bit_full_range",
+      "detectedOriginalFormat": "png",
+      "entropyOfDistribution": 0.2795271794835648,
+      "pixelsHigh": 96,
+      "pixelsWide": 256
+    }
+  ]
+}
